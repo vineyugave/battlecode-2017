@@ -1,10 +1,12 @@
 package com.dd.framework;
 
 import battlecode.common.*;
+import com.dd.framework.buffer.SharedBuffer;
 
 public abstract strictfp class BaseRobot {
 
 	private final RobotController mRobotController;
+	private SharedBuffer mSharedBuffer;
 
 	public BaseRobot(RobotController controller) {
 		mRobotController = controller;
@@ -14,13 +16,31 @@ public abstract strictfp class BaseRobot {
 		return mRobotController;
 	}
 
+	protected SharedBuffer getSharedBuffer() throws Exception {
+		if (mSharedBuffer == null) {
+			mSharedBuffer = new SharedBuffer(mRobotController);
+		}
+		return mSharedBuffer;
+	}
+
 	@SuppressWarnings("InfiniteLoopStatement")
 	public void loop() {
 		while (true) {
 			try {
+				// do one game round
 				onGameRound(mRobotController);
 			} catch (Throwable t) {
 				System.err.println("Error in " + mRobotController.getType());
+				t.printStackTrace();
+			}
+
+			try {
+				// flush the buffer
+				if (mSharedBuffer != null) {
+					mSharedBuffer.flush();
+				}
+			} catch (Throwable t) {
+				System.err.println("Error cleaning up " + mRobotController.getType());
 				t.printStackTrace();
 			}
 
@@ -38,7 +58,6 @@ public abstract strictfp class BaseRobot {
 	 *
 	 * @param dir The intended direction of movement
 	 * @return true if a move was performed
-	 * @throws GameActionException
 	 */
 	protected boolean tryMove(Direction dir) throws GameActionException {
 		return tryMove(dir, 20, 3);

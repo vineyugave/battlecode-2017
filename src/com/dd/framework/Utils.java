@@ -6,21 +6,16 @@ import java.util.Random;
 
 public final class Utils {
 
-	public static final long RANDOM_SEED = 5;
+	public static final long RANDOM_SEED = 8;
 
-	private static final Random sRand = new Random(RANDOM_SEED);
+	private static final Random sRand = new Random((long) (Math.random() * Long.MAX_VALUE) + RANDOM_SEED);
 
 	private Utils() {
 		// do not instantiate
 	}
 
-	/**
-	 * Returns a random Direction
-	 *
-	 * @return a random Direction
-	 */
 	public static Direction randomDirection() {
-		return new Direction((float) Math.random() * 2 * (float) Math.PI);
+		return new Direction((float) sRand.nextFloat() * 2 * (float) Math.PI);
 	}
 
 	public static void shuffle(Object[] array) {

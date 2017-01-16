@@ -1,4 +1,4 @@
-package testing.robots;
+package testing1.robots;
 
 import battlecode.common.*;
 import com.dd.framework.BaseRobot;

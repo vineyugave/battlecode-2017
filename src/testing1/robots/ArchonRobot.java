@@ -1,4 +1,4 @@
-package testing.robots;
+package testing1.robots;
 
 import battlecode.common.Direction;
 import battlecode.common.RobotController;
