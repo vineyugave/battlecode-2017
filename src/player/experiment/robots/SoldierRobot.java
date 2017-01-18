@@ -1,4 +1,4 @@
-package testing.robots;
+package player.experiment.robots;
 
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;

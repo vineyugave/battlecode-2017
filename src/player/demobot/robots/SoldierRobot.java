@@ -1,4 +1,4 @@
-package baseline.robots;
+package player.demobot.robots;
 
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;

@@ -1,4 +1,4 @@
-package demobot.robots;
+package player.demobot.robots;
 
 import battlecode.common.Direction;
 import battlecode.common.MapLocation;

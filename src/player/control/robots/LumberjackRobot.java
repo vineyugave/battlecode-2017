@@ -1,4 +1,4 @@
-package baseline.robots;
+package player.control.robots;
 
 import battlecode.common.*;
 import ddframework.robots.BaseRobot;

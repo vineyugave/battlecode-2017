@@ -1,4 +1,4 @@
-package baseline.robots;
+package player.control.robots;
 
 import battlecode.common.Direction;
 import battlecode.common.RobotController;
