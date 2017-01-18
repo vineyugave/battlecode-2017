@@ -1,8 +1,8 @@
 package baseline.robots;
 
 import battlecode.common.*;
-import com.dd.framework.BaseRobot;
-import com.dd.framework.Utils;
+import ddframework.robots.BaseRobot;
+import ddframework.util.RandomUtil;
 
 import java.util.Random;
 
@@ -31,11 +31,22 @@ public class FarmerGardenerRobot extends BaseRobot {
 		mMyTeam = controller.getTeam();
 		mEnemyTeam = mMyTeam.opponent();
 
-		MapLocation location = controller.getLocation();
-		Random rand = new Random((long) (location.x + location.y) + Utils.RANDOM_SEED);
+		MapLocation myLocation = controller.getLocation();
+		Random rand = new Random(RandomUtil.RANDOM_SEED);
+
+		final RobotInfo[] nearbyRobots = controller.senseNearbyRobots();
+		for (RobotInfo robot : nearbyRobots) {
+			if (robot.getType() == RobotType.ARCHON) {
+				mExploreDir = new Direction(robot.getLocation(), myLocation);
+				break;
+			}
+		}
+
+		if (mExploreDir == null) {
+			mExploreDir = new Direction(rand.nextInt(3) - 1, rand.nextInt(3) - 1);
+		}
 
 		mCurrentState = STATE_EXPLORE_1;
-		mExploreDir = new Direction(rand.nextInt(3) - 1, rand.nextInt(3) - 1);
 	}
 
 	@Override
@@ -53,7 +64,7 @@ public class FarmerGardenerRobot extends BaseRobot {
 				}
 				break;
 			case STATE_EXPLORE_RAND:
-				Direction randDir = Utils.randomDirection();
+				Direction randDir = RandomUtil.randomDirection();
 				if (rc.canMove(randDir)) {
 					rc.move(randDir);
 				}
@@ -99,7 +110,7 @@ public class FarmerGardenerRobot extends BaseRobot {
 
 				// water
 				TreeInfo[] treeInfos = rc.senseNearbyTrees();
-				Utils.shuffle(treeInfos);
+				RandomUtil.shuffle(treeInfos);
 				for (TreeInfo tree : treeInfos) {
 					if (tree.team.equals(mMyTeam)) {
 						float health = tree.getHealth();

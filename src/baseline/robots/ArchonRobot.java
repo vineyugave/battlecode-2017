@@ -2,14 +2,14 @@ package baseline.robots;
 
 import battlecode.common.Direction;
 import battlecode.common.RobotController;
-import com.dd.framework.BaseRobot;
-import com.dd.framework.Utils;
+import ddframework.robots.BaseRobot;
+import ddframework.util.RandomUtil;
 
 public class ArchonRobot extends BaseRobot {
 
 	private static final float BULLET_THRESHOLD_GARDENER_BUILD = 125f;
 	private static final float ROUND_THRESHOLD_GARDENER_BUILD = 0.4f;
-	private static final float VP_BUY_THRESHOLD = 600f;
+	private static final float VP_BUY_THRESHOLD = 500f;
 
 	private final float mTotalRounds;
 
@@ -27,7 +27,7 @@ public class ArchonRobot extends BaseRobot {
 
 		if (shouldBuildFarmer(bulletCount, roundPercent)) {
 			for (int i = 0; i < 8; i++ ) {
-				Direction dir = Utils.randomDirection();
+				Direction dir = RandomUtil.randomDirection();
 				if (rc.canHireGardener(dir)) {
 					rc.hireGardener(dir);
 					break;
@@ -37,11 +37,12 @@ public class ArchonRobot extends BaseRobot {
 
 		// buy victory points
 		if (bulletCount >= VP_BUY_THRESHOLD) {
-			rc.donate(100);
+			int donationCount = (int) (bulletCount / 10);
+			rc.donate((donationCount / 2) * 10);
 		}
 
 		// Move randomly
-		tryMove(Utils.randomDirection());
+		tryMove(RandomUtil.randomDirection());
 	}
 
 	private boolean shouldBuildFarmer(float bulletCount, float roundPercent) {

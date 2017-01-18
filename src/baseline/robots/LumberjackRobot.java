@@ -1,8 +1,8 @@
 package baseline.robots;
 
 import battlecode.common.*;
-import com.dd.framework.BaseRobot;
-import com.dd.framework.Utils;
+import ddframework.robots.BaseRobot;
+import ddframework.util.RandomUtil;
 
 public class LumberjackRobot extends BaseRobot {
 
@@ -35,7 +35,7 @@ public class LumberjackRobot extends BaseRobot {
                 tryMove(toEnemy);
             } else {
                 // Move Randomly
-                tryMove(Utils.randomDirection());
+                tryMove(RandomUtil.randomDirection());
             }
         }
     }

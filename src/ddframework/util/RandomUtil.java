@@ -1,17 +1,21 @@
-package com.dd.framework;
+package ddframework.util;
 
 import battlecode.common.Direction;
 
 import java.util.Random;
 
-public final class Utils {
+public final class RandomUtil {
 
-	public static final long RANDOM_SEED = 8;
+	public static final long RANDOM_SEED = 10;
 
 	private static final Random sRand = new Random((long) (Math.random() * Long.MAX_VALUE) + RANDOM_SEED);
 
-	private Utils() {
+	private RandomUtil() {
 		// do not instantiate
+	}
+
+	public static Random getRandom() {
+		return sRand;
 	}
 
 	public static Direction randomDirection() {

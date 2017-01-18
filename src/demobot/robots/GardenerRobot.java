@@ -1,11 +1,11 @@
-package demo.robots;
+package demobot.robots;
 
 import battlecode.common.Direction;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
-import com.dd.framework.BaseRobot;
-import com.dd.framework.Utils;
+import ddframework.robots.BaseRobot;
+import ddframework.util.RandomUtil;
 
 public class GardenerRobot extends BaseRobot {
 
@@ -21,7 +21,7 @@ public class GardenerRobot extends BaseRobot {
         MapLocation archonLoc = new MapLocation(xPos, yPos);
 
         // Generate a random direction
-        Direction dir = Utils.randomDirection();
+        Direction dir = RandomUtil.randomDirection();
 
         // Randomly attempt to build a soldier or lumberjack in this direction
         if (rc.canBuildRobot(RobotType.SOLDIER, dir) && Math.random() < .01) {
@@ -31,6 +31,6 @@ public class GardenerRobot extends BaseRobot {
         }
 
         // Move randomly
-        tryMove(Utils.randomDirection());
+        tryMove(RandomUtil.randomDirection());
     }
 }

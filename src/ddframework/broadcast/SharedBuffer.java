@@ -1,4 +1,4 @@
-package com.dd.framework.buffer;
+package ddframework.broadcast;
 
 import battlecode.common.GameConstants;
 import battlecode.common.RobotController;
@@ -6,10 +6,15 @@ import battlecode.common.RobotController;
 public class SharedBuffer {
 
 	private static final int UNKNOWN = Integer.MIN_VALUE;
-
-	public static final int IDX_STACK_POINTER = 128;
-	private static final int IDX_STACK_START = 129;
 	private static final int IDX_STACK_END = GameConstants.BROADCAST_MAX_CHANNELS;
+
+	public interface KnownIndexes {
+		int FARMER_COUNT = 0;
+
+		// all static indexes must be less than STACK_POINTER in order to not interfere with the stack
+		int STACK_POINTER = 128;
+		int STACK_START = STACK_POINTER + 1;
+	}
 
 	private final RobotController mRc;
 
@@ -28,9 +33,9 @@ public class SharedBuffer {
 	 */
 	private void init() throws Exception {
 		if (!mInitialized) {
-			mCachedNextWritePointer = mRc.readBroadcast(IDX_STACK_POINTER);
+			mCachedNextWritePointer = mRc.readBroadcast(KnownIndexes.STACK_POINTER);
 			if (mCachedNextWritePointer == 0) {
-				mCachedNextWritePointer = IDX_STACK_START;
+				mCachedNextWritePointer = KnownIndexes.STACK_START;
 			}
 			mInitialized = true;
 		}
@@ -42,26 +47,26 @@ public class SharedBuffer {
 	public void flush() throws Exception {
 		if (mDirty) {
 			init();
-			mRc.broadcast(IDX_STACK_POINTER, mCachedNextWritePointer);
+			mRc.broadcast(KnownIndexes.STACK_POINTER, mCachedNextWritePointer);
 			mDirty = false;
 		}
 	}
 
 	/**
 	 * Writes to a known location
-	 * @param knownLocation the location. must be less than {@link #IDX_STACK_POINTER}
-	 * @param value
-	 * @throws Exception
+	 * @param knownLocation the location. must be less than {@link KnownIndexes#STACK_POINTER}
+	 * @param value the value
 	 */
 	public void write(int knownLocation, int value) throws Exception {
-		if (knownLocation < IDX_STACK_POINTER) {
+		if (knownLocation < KnownIndexes.STACK_POINTER) {
 			mRc.broadcast(knownLocation, value);
 		}
 	}
 
 	/**
 	 * Reads a messsage from a known location in the shared buffer
-	 * @param knownLocation should be less than {@link #IDX_STACK_POINTER}
+	 *
+	 * @param knownLocation should be less than {@link KnownIndexes#STACK_POINTER}
 	 * @return the message
 	 */
 	public int read(int knownLocation) throws Exception {
@@ -70,7 +75,7 @@ public class SharedBuffer {
 
 	public int getStackSize() throws Exception {
 		init();
-		return mCachedNextWritePointer - IDX_STACK_START;
+		return mCachedNextWritePointer - KnownIndexes.STACK_START;
 	}
 
 	public boolean isEmpty() throws Exception {
@@ -105,7 +110,7 @@ public class SharedBuffer {
 	public int readStack(int idxFromTop) throws Exception {
 		init();
 		final int readIdx = mCachedNextWritePointer - 1 - idxFromTop;
-		if (readIdx < IDX_STACK_START) {
+		if (readIdx < KnownIndexes.STACK_START) {
 			return UNKNOWN;
 		}
 		return mRc.readBroadcast(readIdx);

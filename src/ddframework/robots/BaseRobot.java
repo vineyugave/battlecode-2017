@@ -1,7 +1,7 @@
-package com.dd.framework;
+package ddframework.robots;
 
 import battlecode.common.*;
-import com.dd.framework.buffer.SharedBuffer;
+import ddframework.broadcast.SharedBuffer;
 
 public abstract strictfp class BaseRobot {
 

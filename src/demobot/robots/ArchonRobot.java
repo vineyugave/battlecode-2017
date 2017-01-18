@@ -1,10 +1,10 @@
-package demo.robots;
+package demobot.robots;
 
 import battlecode.common.Direction;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
-import com.dd.framework.BaseRobot;
-import com.dd.framework.Utils;
+import ddframework.robots.BaseRobot;
+import ddframework.util.RandomUtil;
 
 public class ArchonRobot extends BaseRobot {
 
@@ -15,7 +15,7 @@ public class ArchonRobot extends BaseRobot {
     @Override
     protected void onGameRound(RobotController rc) throws Exception {
         // Generate a random direction
-        Direction dir = Utils.randomDirection();
+        Direction dir = RandomUtil.randomDirection();
 
         // Randomly attempt to build a gardener in this direction
         if (rc.canHireGardener(dir) && Math.random() < .01) {
@@ -23,7 +23,7 @@ public class ArchonRobot extends BaseRobot {
         }
 
         // Move randomly
-        tryMove(Utils.randomDirection());
+        tryMove(RandomUtil.randomDirection());
 
         // Broadcast archon's location for other robots on the team to know
         MapLocation myLocation = rc.getLocation();

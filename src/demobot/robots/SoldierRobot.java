@@ -1,11 +1,11 @@
-package demo.robots;
+package demobot.robots;
 
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 import battlecode.common.Team;
-import com.dd.framework.BaseRobot;
-import com.dd.framework.Utils;
+import ddframework.robots.BaseRobot;
+import ddframework.util.RandomUtil;
 
 public class SoldierRobot extends BaseRobot {
 
@@ -34,6 +34,6 @@ public class SoldierRobot extends BaseRobot {
         }
 
         // Move randomly
-        tryMove(Utils.randomDirection());
+        tryMove(RandomUtil.randomDirection());
     }
 }

@@ -1,7 +1,7 @@
 package testing.robots;
 
 import battlecode.common.RobotController;
-import com.dd.framework.BaseRobot;
+import ddframework.robots.BaseRobot;
 
 public class TankRobot extends BaseRobot {
 
