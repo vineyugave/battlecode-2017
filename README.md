@@ -1,8 +1,35 @@
-Battlecode Project Scaffold
+DD Battlecode Project
 ===========================
 
-Here you'll find (almost) everything you need to write players for Battlecode
-2017.
+This is the DD Battlecode repo!
+
+## DD Framework Overview
+- `src/player`
+    Each package in this directory is for one whole player. Each player must be represented by exactly **one** class
+    named `RobotPlayer`.
+- `src/ddframework`
+    This is our root package for code that is shared between players
+- `src/player/demobot`
+    This is the example that shipped with the Battlecode scaffold. It has been refactored to use our framework, but
+     otherwise, every Battlecode contestant has this logic as a starting point.
+- `src/player/control` and `src/player/experiment`
+    If you want to have "control" and "experiment" copies of similar logic, so that you can play them against each other
+    in order to tune your strategy, these are examples.
+- `src/player/{playername}/robots`
+    These are the classes that describe different robot behaviors. The `RobotPlayer` class chooses the appropriate one
+    to create depending on which type of robot it is. If you want to get fancy and have multiple possible classes for
+    each type of robot, you could put that logic in `RobotPlayer`.
+- `src/ddframework/broadcast/SharedBuffer.java`
+    This is one possible means of coordinating the shared buffer that robots use to broadcast messages to each other. It
+    currently supports two approaches:
+    - Known Locations: Fixed locations that are known to all robots. Each index in the array is assigned a single,
+    permanent meaning, and the value at that index represents some kind of counter or other state.
+    - Message Stack: A data structure that supports Push and Pop operations. When reading from or writing to the stack,
+    you don't need to know what exact location you are interacting with. Each message is one integer, which can be
+    partitioned into groups of bits to represent "what" the message is, who sent it, who the recipient is, or etc. This
+    protocol can be determined later. Talk to Jonathan if you have questions or suggestions.
+
+
 
 Other documentation and resources can be found at: https://www.battlecode.org/
 
@@ -31,42 +58,6 @@ Other documentation and resources can be found at: https://www.battlecode.org/
     The Unix (OS X/Linux) and Windows versions, respectively, of the Gradle wrapper. These are nifty scripts that you can execute in a terminal to run the Gradle build tasks of this project. If you aren't planning to do command line development, these can be safely ignored.
 - `gradle/`
     Contains files used by the Gradle wrapper scripts. Can be safely ignored.
-
-
-### How does Battlecode work?
-
-The Battlecode software consists of three major components:
-
-- The player library/API: these are the classes that you will import and build
-  against when writing a player.
-
-- The server: this is the software that computes Battlecode matches. For most
-  users, the server will run transparently, so you don't have to worry about it.
-  However, advanced server setups are possible, allowing you to compute matches
-  on one machine and view them on another.
-
-- The client: this is the software that displays Battlecode matches. For most
-  users, the client will automatically create a server for running a match and
-  display that match as it computes. The client also plays match files like
-  those from scrimmage matches and the tournaments. Finally, the client also
-  contains a map editor, for those who would like to create their own maps
-  to test their robots on.
-
-This project scaffold handles installing and running these components using Gradle.
-
-
-### What is Gradle?
-
-Gradle is a build system that expands upon the features of earlier build systems like Apache Ant and Apache Maven, utilizing a domain-specific language based off of Groovy, a JVM language.
-
-You can run it from a terminal or from an IDE; instructions are below.
-
-You can find Gradle's documentation at: https://gradle.org/
-
-You are not required to use the Gradle build script, but you should probably at
-least read it to get an idea of how things work.
-
-Note also that you are not required to install Gradle, even if you are working in command line.
 
 
 ## Getting started
@@ -221,7 +212,3 @@ about how to write your own map files, check the specs.
 
 We recommend using the map editor to create maps. The map editor can be ran from the client. Instructions can be found within the client.
 
-## Scala
-
-Most contestants choose to write their players in Java, but we also support
-Scala (or a mix of Java and Scala) out of the box, with the standard install.
