@@ -1,4 +1,4 @@
-package player.experiment.robots;
+package p_control.robots;
 
 import battlecode.common.RobotController;
 import ddframework.robots.BaseRobot;

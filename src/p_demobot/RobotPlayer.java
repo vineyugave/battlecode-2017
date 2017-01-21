@@ -1,9 +1,9 @@
-package player.demobot;
+package p_demobot;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import ddframework.robots.BaseRobot;
-import player.demobot.robots.*;
+import p_demobot.robots.*;
 
 @SuppressWarnings("unused")
 public strictfp class RobotPlayer {

@@ -1,4 +1,4 @@
-package player.experiment.robots;
+package p_experiment.robots;
 
 import battlecode.common.Direction;
 import battlecode.common.RobotController;

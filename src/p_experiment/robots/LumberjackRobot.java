@@ -1,4 +1,4 @@
-package player.experiment.robots;
+package p_experiment.robots;
 
 import battlecode.common.*;
 import ddframework.robots.BaseRobot;

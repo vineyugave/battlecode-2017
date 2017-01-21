@@ -1,11 +1,11 @@
-package player.control.robots;
+package p_demobot.robots;
 
 import battlecode.common.RobotController;
 import ddframework.robots.BaseRobot;
 
-public class ScoutRobot extends BaseRobot {
+public class TankRobot extends BaseRobot {
 
-    public ScoutRobot(RobotController controller) {
+    public TankRobot(RobotController controller) {
         super(controller);
     }
 

@@ -1,9 +1,14 @@
-package player.experiment;
+package p_control;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import ddframework.robots.BaseRobot;
-import player.experiment.robots.*;
+import p_control.robots.ArchonRobot;
+import p_control.robots.FarmerGardenerRobot;
+import p_control.robots.LumberjackRobot;
+import p_control.robots.ScoutRobot;
+import p_control.robots.SoldierRobot;
+import p_control.robots.TankRobot;
 
 @SuppressWarnings("unused")
 public strictfp class RobotPlayer {

@@ -1,4 +1,4 @@
-package player.demobot.robots;
+package p_control.robots;
 
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;

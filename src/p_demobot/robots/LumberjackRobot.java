@@ -1,4 +1,4 @@
-package player.demobot.robots;
+package p_demobot.robots;
 
 import battlecode.common.*;
 import ddframework.robots.BaseRobot;

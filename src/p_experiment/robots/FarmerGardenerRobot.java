@@ -1,4 +1,4 @@
-package player.control.robots;
+package p_experiment.robots;
 
 import battlecode.common.*;
 import ddframework.robots.BaseRobot;
@@ -8,8 +8,8 @@ import java.util.Random;
 
 public class FarmerGardenerRobot extends BaseRobot {
 
-	private static final int RAND_EXPLORES = 10;
-	private static final int REVERSES = 2;
+	private static final int RAND_EXPLORES = 3;
+	private static final int REVERSES = 3;
 	private static final float TREE_RING_SEARCH_INCREMENT_RAD = (float) ((2d * Math.PI) / 12d);
 
 	private static final int STATE_EXPLORE_1 = 0;
@@ -18,8 +18,8 @@ public class FarmerGardenerRobot extends BaseRobot {
 	private static final int STATE_REVERSE = 3;
 	private static final int STATE_TREE_RING = 4;
 
-	private Team mMyTeam;
-	private Team mEnemyTeam;
+	private final Team mMyTeam;
+
 	private int mCurrentState;
 	private Direction mExploreDir;
 	private int mRandExplores;
@@ -29,11 +29,10 @@ public class FarmerGardenerRobot extends BaseRobot {
 		super(controller);
 
 		mMyTeam = controller.getTeam();
-		mEnemyTeam = mMyTeam.opponent();
 
 		MapLocation myLocation = controller.getLocation();
-		Random rand = new Random(RandomUtil.RANDOM_SEED);
 
+		// move directly away from the Archon that spawned us (or whichever one is first in the array...)
 		final RobotInfo[] nearbyRobots = controller.senseNearbyRobots();
 		for (RobotInfo robot : nearbyRobots) {
 			if (robot.getType() == RobotType.ARCHON) {
@@ -42,7 +41,9 @@ public class FarmerGardenerRobot extends BaseRobot {
 			}
 		}
 
+		// no Archon nearby, (very improbable) so pick a random direction
 		if (mExploreDir == null) {
+			Random rand = RandomUtil.getRandom();
 			mExploreDir = new Direction(rand.nextInt(3) - 1, rand.nextInt(3) - 1);
 		}
 
@@ -55,6 +56,8 @@ public class FarmerGardenerRobot extends BaseRobot {
 		switch (mCurrentState) {
 			default:
 			case STATE_EXPLORE_1:
+				// move in the explore direction until we hit something
+
 				if (rc.canMove(mExploreDir)) {
 					rc.move(mExploreDir);
 					nextState = STATE_EXPLORE_1;
@@ -64,6 +67,8 @@ public class FarmerGardenerRobot extends BaseRobot {
 				}
 				break;
 			case STATE_EXPLORE_RAND:
+				// move randomly in case the thing we hit was also moving
+
 				Direction randDir = RandomUtil.randomDirection();
 				if (rc.canMove(randDir)) {
 					rc.move(randDir);
@@ -76,6 +81,8 @@ public class FarmerGardenerRobot extends BaseRobot {
 				}
 				break;
 			case STATE_EXPLORE_2:
+				// continue exploring in the explore direction until we hit something again
+
 				if (rc.canMove(mExploreDir)) {
 					rc.move(mExploreDir);
 					nextState = STATE_EXPLORE_2;
@@ -85,6 +92,8 @@ public class FarmerGardenerRobot extends BaseRobot {
 				}
 				break;
 			case STATE_REVERSE:
+				// back up a bit to make room for our tree ring and the thing we hit
+
 				Direction opposite = mExploreDir.opposite();
 				if (rc.canMove(opposite)) {
 					rc.move(opposite);
@@ -97,6 +106,8 @@ public class FarmerGardenerRobot extends BaseRobot {
 				}
 				break;
 			case STATE_TREE_RING:
+				// build and maintain the tree ring
+
 				// try to fill in the ring
 				final float startDir = mExploreDir.radians;
 				final float endDir = (float) (startDir + (2 * Math.PI));
@@ -115,7 +126,7 @@ public class FarmerGardenerRobot extends BaseRobot {
 					if (tree.team.equals(mMyTeam)) {
 						float health = tree.getHealth();
 						float maxHealth = tree.getMaxHealth();
-						if (health / maxHealth <0.7f) {
+						if (health / maxHealth < 0.7f) {
 							int treeId = tree.getID();
 							if (rc.canWater(treeId)) {
 								rc.water(treeId);
