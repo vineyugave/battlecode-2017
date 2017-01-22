@@ -4,12 +4,23 @@ import battlecode.common.*;
 import ddframework.broadcast.SharedBuffer;
 
 public abstract strictfp class BaseRobot {
-
-	private final RobotController mRobotController;
 	private SharedBuffer mSharedBuffer;
+	private final RobotController mRobotController;
+
+	protected static Team myTeam;
+	protected static Team enemyTeam;
+
+	protected int myId;
+	protected MapLocation myLocation;
+	protected TreeInfo[] visibleTrees;
+	protected RobotInfo[] visibleHostiles;
+	protected RobotInfo[] visibleFriendlies;
 
 	public BaseRobot(RobotController controller) {
 		mRobotController = controller;
+		myTeam = controller.getTeam();
+		enemyTeam = myTeam.opponent();
+		myId = controller.getID();
 	}
 
 	protected RobotController getRc() {
@@ -28,6 +39,10 @@ public abstract strictfp class BaseRobot {
 		while (true) {
 			try {
 				// do one game round
+				myLocation = mRobotController.getLocation();
+				dodge();
+				senseNearbyBots();
+				senseNearbyTrees();
 				onGameRound(mRobotController);
 			} catch (Throwable t) {
 				System.err.println("Error in " + mRobotController.getType());
@@ -132,5 +147,51 @@ public abstract strictfp class BaseRobot {
 		float perpendicularDist = (float) Math.abs(distToRobot * Math.sin(theta)); // soh cah toa :)
 
 		return (perpendicularDist <= mRobotController.getType().bodyRadius);
+	}
+
+	public void senseNearbyTrees() {
+		visibleTrees = getRc().senseNearbyTrees();
+	}
+
+	public void senseNearbyBots() {
+		visibleHostiles = mRobotController.senseNearbyRobots(myLocation, mRobotController.getType().sensorRadius, enemyTeam);
+		visibleFriendlies = mRobotController.senseNearbyRobots(myLocation, mRobotController.getType().sensorRadius, myTeam);
+	}
+
+	protected void dodge()
+	{
+		BulletInfo[] bullets = mRobotController.senseNearbyBullets();
+		for (BulletInfo bullet : bullets) {
+			if (willCollideWithMe(bullet)) {
+				trySidestep(bullet);
+			}
+		}
+	}
+
+	protected void trySidestep(BulletInfo b)
+	{
+		try
+		{
+			MapLocation myLoc = mRobotController.getLocation();
+			Direction bulletToRobot = b.location.directionTo(myLoc);
+			float theta = b.dir.radiansBetween(bulletToRobot);
+			if(theta < 0)
+			{
+				// Bullet on My Left
+				Direction moveDir = myLoc.directionTo(b.location).rotateRightDegrees(90);
+				tryMove(moveDir);
+			}
+			else
+			{
+				// Bullet on My Right
+				Direction moveDir = myLoc.directionTo(b.location).rotateLeftDegrees(90);
+				tryMove(moveDir);
+			}
+		}
+		catch (GameActionException e)
+		{
+			System.out.println("Sidestep Attempt Failed!");
+			e.printStackTrace();
+		}
 	}
 }

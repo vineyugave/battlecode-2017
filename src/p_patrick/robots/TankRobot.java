@@ -1,0 +1,34 @@
+package p_patrick.robots;
+
+import battlecode.common.MapLocation;
+import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
+import ddframework.robots.BaseRobot;
+import ddframework.util.RandomUtil;
+
+public class TankRobot extends BaseRobot {
+
+    public TankRobot(RobotController controller) {
+        super(controller);
+    }
+
+    @Override
+    protected void onGameRound(RobotController rc) throws Exception {
+        MapLocation myLocation = rc.getLocation();
+
+        // See if there are any nearby enemy robots
+        RobotInfo[] robots = rc.senseNearbyRobots(-1, enemyTeam);
+
+        // If there are some...
+        if (robots.length > 0) {
+            // And we have enough bullets, and haven't attacked yet this turn...
+            if (rc.canFireSingleShot()) {
+                // ...Then fire a bullet in the direction of the enemy.
+                rc.fireSingleShot(rc.getLocation().directionTo(robots[0].location));
+            }
+        }
+
+        // Move randomly
+        tryMove(RandomUtil.randomDirection());
+    }
+}
