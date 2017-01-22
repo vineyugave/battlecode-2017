@@ -2,12 +2,12 @@ package p_patrick.robots;
 
 import battlecode.common.*;
 import ddframework.robots.BaseRobot;
-import ddframework.util.RandomUtil;
-import ddframework.util.VectorMath;
+import ddframework.util.CombatUtil;
+import ddframework.util.Navigation;
 
 public class ScoutRobot extends BaseRobot {
 
-    static public Direction exploreDirection = new Direction((float)Math.random() * 2 * (float)Math.PI);
+    static private Direction exploreDirection = new Direction((float)Math.random() * 2 * (float)Math.PI);
 
     public ScoutRobot(RobotController controller) {
         super(controller);
@@ -24,30 +24,35 @@ public class ScoutRobot extends BaseRobot {
             // search for all gardeners first
             for (RobotInfo robot : visibleHostiles) {
                 if (robot.type == RobotType.GARDENER) {
-                    attackAndFollow(robot, rc);
+                    CombatUtil.attackAndFollow(robot, rc);
                     foundHighPriorityTarget = true;
+                    break;
                 }
             }
             if (!foundHighPriorityTarget){
                 // search for archons if we didn't find a gardener
                 for (RobotInfo robot : visibleHostiles) {
-                    if (robot.type == RobotType.GARDENER) {
-                        attackAndFollow(robot, rc);
+                    if (robot.type == RobotType.ARCHON) {
+                        CombatUtil.attackAndFollow(robot, rc);
                         foundHighPriorityTarget = true;
+                        break;
                     }
                 }
             }
             if (!foundHighPriorityTarget) {
-                attackAndFollow(visibleHostiles[0], rc);
+                CombatUtil.attackAndFollow(visibleHostiles[0], rc);
             }
 
         } else {
+            // TODO: Check for global target using buffer instead of going random
+
             explore();
         }
     }
 
     private void treeShakeHop() throws GameActionException {
         RobotController rc = getRc();
+        // If we've already moved this turn, don't continue with tree shaking to save byte count
         if (rc.hasMoved()) {
             return;
         }
@@ -55,13 +60,13 @@ public class ScoutRobot extends BaseRobot {
         for (TreeInfo tree : visibleTrees) {
             if (tree.containedBullets > 0) {
                 if (rc.canShake(tree.location) && tree.containedBullets > 0 && rc.canInteractWithTree(tree.getID())) {
-                    System.out.print("SHAKIN' DAT TREE.  Previous Bullets: " + rc.getTeamBullets());
+                    System.out.print("SHAKIN' DAT TREE.  Pre-Shake Bullet Count: " + rc.getTeamBullets());
                     rc.shake(tree.location);
-                    System.out.print("SHOOK DAT TREE.  After Bullets: " + rc.getTeamBullets());
+                    System.out.print("SHOOK DAT TREE.  Post-Shake Bullet Count: " + rc.getTeamBullets());
                     rc.setIndicatorDot(tree.location,0,155,155);
                 } else {
                     Direction dir = myLocation.directionTo(tree.location);
-                    tryMove(dir);
+                    Navigation.tryMove(dir, rc);
                 }
                 return;
             }
@@ -75,27 +80,10 @@ public class ScoutRobot extends BaseRobot {
             return;
         }
 
-        // TODO: Check for global target instead of going random
-
         System.out.println("Exploring in a random direction: " + exploreDirection);
-        if (!tryMove(exploreDirection)) {
+        if (!Navigation.tryMove(exploreDirection, rc)) {
             exploreDirection = exploreDirection.rotateLeftDegrees(90);
-            tryMove(exploreDirection);
-        }
-
-    }
-
-    private void attackAndFollow(RobotInfo robot, RobotController rc) throws GameActionException {
-        MapLocation myLocation = rc.getLocation();
-        MapLocation enemyLocation = robot.getLocation();
-        Direction toEnemy = myLocation.directionTo(enemyLocation);
-
-        tryMove(toEnemy);
-
-        if (!rc.hasAttacked()) {
-            if (rc.canFireSingleShot()) {
-                rc.fireSingleShot(toEnemy);
-            }
+            Navigation.tryMove(exploreDirection, rc);
         }
 
     }

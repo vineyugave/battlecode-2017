@@ -2,6 +2,7 @@ package p_experiment.robots;
 
 import battlecode.common.*;
 import ddframework.robots.BaseRobot;
+import ddframework.util.Navigation;
 import ddframework.util.RandomUtil;
 
 public class LumberjackRobot extends BaseRobot {
@@ -32,10 +33,10 @@ public class LumberjackRobot extends BaseRobot {
                 MapLocation enemyLocation = robots[0].getLocation();
                 Direction toEnemy = myLocation.directionTo(enemyLocation);
 
-                tryMove(toEnemy);
+                Navigation.tryMove(toEnemy, rc);
             } else {
                 // Move Randomly
-                tryMove(RandomUtil.randomDirection());
+                Navigation.tryMove(RandomUtil.randomDirection(), rc);
             }
         }
     }

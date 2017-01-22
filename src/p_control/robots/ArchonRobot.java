@@ -3,6 +3,7 @@ package p_control.robots;
 import battlecode.common.Direction;
 import battlecode.common.RobotController;
 import ddframework.robots.BaseRobot;
+import ddframework.util.Navigation;
 import ddframework.util.RandomUtil;
 
 public class ArchonRobot extends BaseRobot {
@@ -42,7 +43,7 @@ public class ArchonRobot extends BaseRobot {
 		}
 
 		// Move randomly
-		tryMove(RandomUtil.randomDirection());
+		Navigation.tryMove(RandomUtil.randomDirection(), rc);
 	}
 
 	private boolean shouldBuildFarmer(float bulletCount, float roundPercent) {

@@ -4,6 +4,7 @@ import battlecode.common.Direction;
 import battlecode.common.RobotController;
 import ddframework.broadcast.SharedBuffer;
 import ddframework.robots.BaseRobot;
+import ddframework.util.Navigation;
 import ddframework.util.RandomUtil;
 
 public class ArchonRobot extends BaseRobot {
@@ -50,7 +51,7 @@ public class ArchonRobot extends BaseRobot {
 		}
 
 		// move
-		if (rc.canMove(mDirection)) {
+		if (!rc.hasMoved() && rc.canMove(mDirection)) {
 			// move in our movement direction
 			rc.move(mDirection);
 		} else {
@@ -69,7 +70,7 @@ public class ArchonRobot extends BaseRobot {
 			} else {
 				mDirection = mDirection.rotateLeftDegrees(OBJECT_AVOID_DEGREES);
 			}
-			tryMove(mDirection);
+			Navigation.tryMove(mDirection, rc);
 		}
 	}
 

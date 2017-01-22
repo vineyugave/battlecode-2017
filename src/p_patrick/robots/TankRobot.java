@@ -4,6 +4,7 @@ import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 import ddframework.robots.BaseRobot;
+import ddframework.util.Navigation;
 import ddframework.util.RandomUtil;
 
 public class TankRobot extends BaseRobot {
@@ -29,6 +30,6 @@ public class TankRobot extends BaseRobot {
         }
 
         // Move randomly
-        tryMove(RandomUtil.randomDirection());
+        Navigation.tryMove(RandomUtil.randomDirection(), rc);
     }
 }

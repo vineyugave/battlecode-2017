@@ -5,6 +5,7 @@ import ddframework.robots.BaseRobot;
 import ddframework.util.RandomUtil;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 public class FarmerGardenerRobot extends BaseRobot {
@@ -28,7 +29,7 @@ public class FarmerGardenerRobot extends BaseRobot {
 	private int mRandExplores;
 	private int mReverses;
 	private HashMap<RobotType, Integer> productionCounts = new HashMap<>();
-	private HashMap<RobotType, Integer> targetProductionCounts = new HashMap<>();
+	private HashMap<RobotType, Integer> targetUnitProductionCounts = new HashMap<>();
 
 
 	public FarmerGardenerRobot(RobotController controller) {
@@ -38,17 +39,16 @@ public class FarmerGardenerRobot extends BaseRobot {
 
 		MapLocation myLocation = controller.getLocation();
 
-		// Initialize our production counts per robot type
-		productionCounts.put(RobotType.SCOUT, 0);
-		productionCounts.put(RobotType.SOLDIER, 0);
-		productionCounts.put(RobotType.TANK, 0);
-		productionCounts.put(RobotType.LUMBERJACK, 0);
-
 		// Initialize our target production counts
-		targetProductionCounts.put(RobotType.SCOUT, 2);
-		targetProductionCounts.put(RobotType.SOLDIER, 1);
-		targetProductionCounts.put(RobotType.TANK, 0);
-		targetProductionCounts.put(RobotType.LUMBERJACK, 1);
+		targetUnitProductionCounts.put(RobotType.SCOUT, 2);
+		targetUnitProductionCounts.put(RobotType.LUMBERJACK, 1);
+		targetUnitProductionCounts.put(RobotType.SOLDIER, 1);
+		//targetUnitProductionCounts.put(RobotType.TANK, 0);
+
+		targetUnitProductionCounts.forEach((t, c) -> {
+			// Initialize our production counts per robot type
+			productionCounts.put(t, 0);
+		});
 
 		// move directly away from the Archon that spawned us (or whichever one is first in the array...)
 		final RobotInfo[] nearbyRobots = controller.senseNearbyRobots();
@@ -73,24 +73,22 @@ public class FarmerGardenerRobot extends BaseRobot {
 		int nextState;
 		final float bulletCount = rc.getTeamBullets();
 
-
-		if (shouldBuildRobot(RobotType.SCOUT, bulletCount)) {
-			Direction randDir = RandomUtil.randomDirection();
-			attemptBuildRobotType(RobotType.SCOUT, randDir, rc);
+		// For each target unit production count we have, check to see if we should built it and if so, do it.
+		// TODO: this isn't great because it doesn't track deaths.  Need to keep producing.
+		for(Map.Entry<RobotType, Integer> entry : targetUnitProductionCounts.entrySet()) {
+			RobotType type = entry.getKey();
+			if (shouldBuildRobot(type, bulletCount)) {
+				Direction randDir = RandomUtil.randomDirection();
+				attemptBuildRobotType(type, randDir, rc);
+			}
 		}
-
-		if (shouldBuildRobot(RobotType.LUMBERJACK, bulletCount)) {
-			Direction randDir = RandomUtil.randomDirection();
-			attemptBuildRobotType(RobotType.LUMBERJACK, randDir, rc);
-		}
-
 
 		switch (mCurrentState) {
 			default:
 			case STATE_EXPLORE_1:
 				// move in the explore direction until we hit something
 
-				if (rc.canMove(mExploreDir)) {
+				if (!rc.hasMoved() && rc.canMove(mExploreDir)) {
 					rc.move(mExploreDir);
 					nextState = STATE_EXPLORE_1;
 				} else {
@@ -103,7 +101,7 @@ public class FarmerGardenerRobot extends BaseRobot {
 				// move randomly in case the thing we hit was also moving
 
 				Direction randDir = RandomUtil.randomDirection();
-				if (rc.canMove(randDir)) {
+				if (!rc.hasMoved() && rc.canMove(randDir)) {
 					rc.move(randDir);
 				}
 				mRandExplores--;
@@ -116,7 +114,7 @@ public class FarmerGardenerRobot extends BaseRobot {
 			case STATE_EXPLORE_2:
 				// continue exploring in the explore direction until we hit something again
 
-				if (rc.canMove(mExploreDir)) {
+				if (!rc.hasMoved() && rc.canMove(mExploreDir)) {
 					rc.move(mExploreDir);
 					nextState = STATE_EXPLORE_2;
 				} else {
@@ -128,7 +126,7 @@ public class FarmerGardenerRobot extends BaseRobot {
 				// back up a bit to make room for our tree ring and the thing we hit
 
 				Direction opposite = mExploreDir.opposite();
-				if (rc.canMove(opposite)) {
+				if (!rc.hasMoved() && rc.canMove(opposite)) {
 					rc.move(opposite);
 				}
 				mReverses--;
@@ -141,9 +139,12 @@ public class FarmerGardenerRobot extends BaseRobot {
 			case STATE_TREE_RING:
 				// build and maintain the tree ring
 
+				// TODO instead of a ring, build trees within x distance of other trees and archons.
+				// ...This will prevent getting stuck and allow room for building units
+
 				// try to fill in the ring
 				final float startDir = mExploreDir.radians;
-				final float endDir = (float) (startDir + (Math.PI)); // semi-circle to prevent blocking
+				final float endDir = (float) (startDir + (Math.PI)); // Temporary fix. semi-circle to prevent blocking
 				for (float f = startDir; f < endDir; f += TREE_RING_SEARCH_INCREMENT_RAD) {
 					Direction treeDir = new Direction(f);
 
@@ -179,7 +180,7 @@ public class FarmerGardenerRobot extends BaseRobot {
 
 	private boolean shouldBuildRobot(RobotType type, float bulletCount) throws Exception {
 		System.out.print("productionCounts for " + type + ": " + productionCounts.get(type));
-		return productionCounts.get(type) < targetProductionCounts.get(type) &&
+		return productionCounts.get(type) < targetUnitProductionCounts.get(type) &&
 				bulletCount > BULLET_BUILD_ROBOT_THRESHOLD;
 	}
 

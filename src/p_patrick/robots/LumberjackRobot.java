@@ -9,6 +9,8 @@ import java.util.Arrays;
 
 public class LumberjackRobot extends BaseRobot {
 
+    static private Direction exploreDirection = new Direction((float)Math.random() * 2 * (float)Math.PI);
+
     public LumberjackRobot(RobotController controller) {
         super(controller);
 
@@ -43,19 +45,28 @@ public class LumberjackRobot extends BaseRobot {
     private void tryMoveChopDir(Direction dir, RobotController rc) throws GameActionException {
 
         // move toward and target trees.
-        TreeInfo[] trees = rc.senseNearbyTrees(rc.getType().sensorRadius, Team.NEUTRAL);
+        TreeInfo[] trees = rc.senseNearbyTrees(rc.getType().sensorRadius);
         if (trees.length > 0) {
-            // Filter the trees down to only ones that are already damaged
-            TreeInfo[] damagedTrees = Arrays.stream(trees).filter(x -> x.getHealth() < x.maxHealth).toArray(TreeInfo[]::new);
+
+            TreeInfo[] enemyNeutralTrees = Arrays.stream(trees).filter(x -> x.getTeam() != rc.getTeam()).toArray(TreeInfo[]::new);
+
+            // Filter the trees down to only ones that are already damaged and don't belong to me.
+            TreeInfo[] damagedTrees = Arrays.stream(enemyNeutralTrees).filter(x -> x.getHealth() < x.maxHealth).toArray(TreeInfo[]::new);
 
             if (damagedTrees.length > 0) {
-                TreeInfo closestTree = Navigation.findClosestTree(trees, rc);
-                dir = myLocation.directionTo(closestTree.location);
-                rc.setIndicatorLine(myLocation, closestTree.location, 155, 155, 0);
-            } else {
-                TreeInfo closestTree = Navigation.findClosestTree(trees, rc);
-                dir = myLocation.directionTo(closestTree.location);
-                rc.setIndicatorLine(myLocation, closestTree.location, 155, 155, 0);
+                TreeInfo closestTree = Navigation.findClosestTree(damagedTrees, rc);
+                if (closestTree != null) {
+                    System.out.print("Found a damaged enemy/neutral tree");
+                    dir = myLocation.directionTo(closestTree.location);
+                    rc.setIndicatorLine(myLocation, closestTree.location, 255, 20, 0);
+                }
+            } else if (enemyNeutralTrees.length > 0) {
+                TreeInfo closestTree = Navigation.findClosestTree(enemyNeutralTrees, rc);
+                if (closestTree != null) {
+                    System.out.print("Found an enemy/neutral tree");
+                    dir = myLocation.directionTo(closestTree.location);
+                    rc.setIndicatorLine(myLocation, closestTree.location, 155, 0, 0);
+                }
             }
         }
 
@@ -65,7 +76,7 @@ public class LumberjackRobot extends BaseRobot {
         // See if there's a tree within strike radius
         TreeInfo treeAhead = rc.senseTreeAtLocation(dirLoc);
         // First, try intended direction
-        if (rc.canMove(dir, 0.75f)) {
+        if (!rc.hasMoved() && rc.canMove(dir, 0.75f)) {
             System.out.print("DOING MOVE");
             rc.move(dir);
         }
@@ -85,12 +96,12 @@ public class LumberjackRobot extends BaseRobot {
                 rc.setIndicatorDot(dirLoc,155,0,155);
             } else {
                 // if we can't chop it, something went wrong... scramble
-                tryMove(RandomUtil.randomDirection());
+                explore();
             }
         } else {
             // Else trying moving randomly
             System.out.print("NO TREE! MOVING ON");
-            tryMove(RandomUtil.randomDirection());
+            explore();
         }
     }
 
@@ -101,6 +112,21 @@ public class LumberjackRobot extends BaseRobot {
         if (rc.canStrike()) {
             rc.strike();
         }
-        tryMove(toEnemy);
+        Navigation.tryMove(toEnemy, rc);
+    }
+
+    private void explore() throws GameActionException {
+        RobotController rc = getRc();
+
+        if (rc.hasMoved()) {
+            return;
+        }
+
+        System.out.println("Exploring in a random direction: " + exploreDirection);
+        if (!Navigation.tryMove(exploreDirection, rc)) {
+            exploreDirection = exploreDirection.rotateLeftDegrees(90);
+            Navigation.tryMove(exploreDirection, rc);
+        }
+
     }
 }
