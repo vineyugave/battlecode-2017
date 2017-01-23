@@ -22,8 +22,10 @@ public class TankRobot extends SmartBaseRobot {
         if (robots.length > 0) {
             // And we have enough bullets, and haven't attacked yet this turn...
             if (rc.canFireSingleShot()) {
-                // ...Then fire a bullet in the direction of the enemy.
-                rc.fireSingleShot(rc.getLocation().directionTo(robots[0].location));
+                if (safeToFireAtTarget(robots[0])) {
+                    // ...Then fire a bullet in the direction of the enemy.
+                    rc.fireSingleShot(rc.getLocation().directionTo(robots[0].location));
+                }
             }
         }
 

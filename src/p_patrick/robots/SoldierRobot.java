@@ -2,6 +2,7 @@ package p_patrick.robots;
 
 import battlecode.common.*;
 import ddframework.robots.SmartBaseRobot;
+import ddframework.util.RandomUtil;
 
 public class SoldierRobot extends SmartBaseRobot {
     static private Direction exploreDirection;
@@ -22,7 +23,7 @@ public class SoldierRobot extends SmartBaseRobot {
 
         // no Gardener nearby, (very improbable) so pick a random direction
         if (exploreDirection == null) {
-            exploreDirection = new Direction((float)Math.random() * 2 * (float)Math.PI);
+            exploreDirection = RandomUtil.randomDirection();
         }
     }
 
@@ -39,7 +40,9 @@ public class SoldierRobot extends SmartBaseRobot {
             if (rc.canFireSingleShot()) {
                 // ...Then fire a bullet in the direction of the enemy.
                 RobotInfo target = findClosestRobot(visibleHostiles);
-                rc.fireSingleShot(rc.getLocation().directionTo(target.location));
+                if (safeToFireAtTarget(target)){
+                    rc.fireSingleShot(rc.getLocation().directionTo(target.location));
+                }
             }
         }
 

@@ -8,7 +8,7 @@ import java.util.Arrays;
 
 public class LumberjackRobot extends SmartBaseRobot {
 
-    static private Direction exploreDirection = new Direction((float)Math.random() * 2 * (float)Math.PI);
+    static private Direction exploreDirection = RandomUtil.randomDirection();
 
     public LumberjackRobot(RobotController controller) {
         super(controller);

@@ -2,10 +2,11 @@ package p_patrick.robots;
 
 import battlecode.common.*;
 import ddframework.robots.SmartBaseRobot;
+import ddframework.util.RandomUtil;
 
 public class ScoutRobot extends SmartBaseRobot {
 
-    static private Direction exploreDirection = new Direction((float)Math.random() * 2 * (float)Math.PI);
+    static private Direction exploreDirection = RandomUtil.randomDirection();
 
     public ScoutRobot(RobotController controller) {
         super(controller);
@@ -21,6 +22,8 @@ public class ScoutRobot extends SmartBaseRobot {
 
         RobotInfo[] hostiles = getCachedVisibleHostiles();
         if (hostiles.length > 0) {
+            // TODO: avoid lumberjacks like the plague.
+
             // search for all gardeners first
             for (RobotInfo robot : hostiles) {
                 if (robot.type == RobotType.GARDENER) {

@@ -1,6 +1,7 @@
 package p_patrick.robots;
 
 import battlecode.common.*;
+import ddframework.robots.BaseRobot;
 import ddframework.robots.SmartBaseRobot;
 import ddframework.util.RandomUtil;
 
@@ -8,11 +9,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-public class FarmerGardenerRobot extends SmartBaseRobot {
+public class FarmerGardenerRobot extends BaseRobot {
 
 	private static final int RAND_EXPLORES = 3;
-	private static final int REVERSES = 3;
-	private static final float TREE_RING_SEARCH_INCREMENT_RAD = (float) ((2d * Math.PI) / 12d);
+	private static final int REVERSES = 5;
+	private static final float TREE_RING_SEARCH_INCREMENT_RAD = (float) ((2d * Math.PI) / 12);
 
 	private static final int STATE_EXPLORE_1 = 0;
 	private static final int STATE_EXPLORE_RAND = 1;
@@ -21,13 +22,17 @@ public class FarmerGardenerRobot extends SmartBaseRobot {
 	private static final int STATE_TREE_RING = 4;
 
 	private static final int BULLET_BUILD_ROBOT_THRESHOLD = 150;
+	private static final int MAX_TREES_IN_RING = 5;
 
 	private final Team mMyTeam;
-
+	private static MapLocation mMyLocation;
 	private int mCurrentState;
 	private Direction mExploreDir;
+	private Direction keepClearDir;
 	private int mRandExplores;
 	private int mReverses;
+	private int treesBuilt = 0;
+
 	private HashMap<RobotType, Integer> productionCounts = new HashMap<>();
 	private HashMap<RobotType, Integer> targetUnitProductionCounts = new HashMap<>();
 
@@ -36,9 +41,7 @@ public class FarmerGardenerRobot extends SmartBaseRobot {
 		super(controller);
 
 		mMyTeam = controller.getTeam();
-
-		MapLocation myLocation = controller.getLocation();
-
+		mMyLocation = controller.getLocation();
 		// Initialize our target production counts
 		targetUnitProductionCounts.put(RobotType.SCOUT, 2);
 		targetUnitProductionCounts.put(RobotType.LUMBERJACK, 1);
@@ -54,7 +57,7 @@ public class FarmerGardenerRobot extends SmartBaseRobot {
 		final RobotInfo[] nearbyRobots = controller.senseNearbyRobots();
 		for (RobotInfo robot : nearbyRobots) {
 			if (robot.getType() == RobotType.ARCHON) {
-				mExploreDir = new Direction(robot.getLocation(), myLocation);
+				mExploreDir = new Direction(robot.getLocation(), mMyLocation);
 				break;
 			}
 		}
@@ -70,13 +73,15 @@ public class FarmerGardenerRobot extends SmartBaseRobot {
 
 	@Override
 	protected void onGameRound(RobotController rc) throws Exception {
-		super.onGameRound(rc);
+		mMyLocation = rc.getLocation();
 
 		int nextState;
 		final float bulletCount = rc.getTeamBullets();
 
 		// For each target unit production count we have, check to see if we should built it and if so, do it.
 		// TODO: this isn't great because it doesn't track deaths.  Need to keep producing.
+		// TODO: Build scout and soldier earlier
+		// TODO: Prioritize lumberjack over soldier if surrounded by many trees.
 		for (Map.Entry<RobotType, Integer> entry : targetUnitProductionCounts.entrySet()) {
 			RobotType type = entry.getKey();
 			if (shouldBuildRobot(type, bulletCount)) {
@@ -134,44 +139,16 @@ public class FarmerGardenerRobot extends SmartBaseRobot {
 				mReverses--;
 				if (mReverses <= 0) {
 					nextState = STATE_TREE_RING;
+					keepClearDir = opposite;
 				} else {
 					nextState = STATE_REVERSE;
 				}
 				break;
 			case STATE_TREE_RING:
-				// build and maintain the tree ring
+				// maintain and build the tree ring
+				tryWaterTrees(rc);
 
-				// TODO instead of a ring, build trees within x distance of other trees and archons.
-				// ...This will prevent getting stuck and allow room for building units
-
-				// try to fill in the ring
-				final float startDir = mExploreDir.radians;
-				final float endDir = (float) (startDir + (Math.PI)); // Temporary fix. semi-circle to prevent blocking
-				for (float f = startDir; f < endDir; f += TREE_RING_SEARCH_INCREMENT_RAD) {
-					Direction treeDir = new Direction(f);
-
-					if (rc.canPlantTree(treeDir)) {
-						rc.plantTree(treeDir);
-						break;
-					}
-				}
-
-				// water
-				TreeInfo[] treeInfos = rc.senseNearbyTrees();
-				RandomUtil.shuffle(treeInfos);
-				for (TreeInfo tree : treeInfos) {
-					if (tree.team.equals(mMyTeam)) {
-						float health = tree.getHealth();
-						float maxHealth = tree.getMaxHealth();
-						if (health / maxHealth < 0.7f) {
-							int treeId = tree.getID();
-							if (rc.canWater(treeId)) {
-								rc.water(treeId);
-								break;
-							}
-						}
-					}
-				}
+				tryBuildTreeRing(rc);
 
 				nextState = STATE_TREE_RING;
 				break;
@@ -201,6 +178,87 @@ public class FarmerGardenerRobot extends SmartBaseRobot {
 			dir = dir.rotateRightDegrees(45);
 		}
 
+	}
+
+	private void tryWaterTrees(RobotController rc) {
+		try {
+			TreeInfo[] treeInfos = rc.senseNearbyTrees();
+			RandomUtil.shuffle(treeInfos);
+			for (TreeInfo tree : treeInfos) {
+				if (tree.team.equals(mMyTeam)) {
+					float health = tree.getHealth();
+					float maxHealth = tree.getMaxHealth();
+					if (health / maxHealth < 0.7f) {
+						int treeId = tree.getID();
+						if (rc.canWater(treeId)) {
+							rc.water(treeId);
+							break;
+						}
+					}
+				}
+			}
+		} catch (GameActionException e) {
+			System.out.print("Exception in FarmerGardenerRobot.waterTrees: " + e);
+		}
+	}
+
+	private void tryBuildTreeRing(RobotController rc) {
+		boolean gardenerTooClose = false;
+		int gardenerNearCount = 0;
+		Direction away = null;
+
+		try {
+			RobotInfo[] visibleFriendlies = rc.senseNearbyRobots(RobotType.GARDENER.sensorRadius, getTeam());
+			// Check to see if other gardeners are nearby and move away if they are.
+			if (treesBuilt == 0 && visibleFriendlies.length > 0 && !rc.hasMoved()) {
+				for (RobotInfo robot : visibleFriendlies) {
+					// Look for other nearby gardeners
+					if (robot.getType() == RobotType.GARDENER) {
+						// If the gardener is close, mark it and set away direction
+						if (robot.location.distanceTo(mMyLocation) < RobotType.GARDENER.bodyRadius * 8) {
+							away = new Direction(robot.location, mMyLocation);
+							rc.setIndicatorLine(mMyLocation, robot.location, 255, 0, 0);
+							gardenerTooClose = true;
+						}
+						gardenerNearCount++;
+					}
+				}
+
+				// Try to leave group of gardeners if many are present
+				if (gardenerTooClose) {
+					// TODO: Fix this... for some reason is doesn't work.
+					if (gardenerNearCount < 3) {
+						System.out.print("There are only " + gardenerNearCount + " nearby. I will stay here.");
+						tryMove(away);
+					} else {
+						System.out.print("There are too many gardeners! " + gardenerNearCount + " nearby. I will leave.");
+						mExploreDir = RandomUtil.randomDirection();
+						tryMove(mExploreDir);
+						mCurrentState = STATE_EXPLORE_1;
+					}
+				}
+			}
+
+			if (treesBuilt <= MAX_TREES_IN_RING && !gardenerTooClose) {
+				// try to fill in the ring
+				rc.setIndicatorLine(mMyLocation, mMyLocation.add(keepClearDir, 2f), 0, 255, 0);
+				final float startDir = keepClearDir.radians + 1f; //keep room for units
+				rc.setIndicatorLine(mMyLocation, mMyLocation.add(startDir, 2f), 50, 50, 0);
+				final float endDir = (float) (startDir + (2 * Math.PI)) - 2.1f; //keep room for units
+				rc.setIndicatorLine(mMyLocation, mMyLocation.add(endDir, 2f), 0, 50, 50);
+				for (float f = startDir; f < endDir; f += TREE_RING_SEARCH_INCREMENT_RAD) {
+					Direction treeDir = new Direction(f);
+					if (rc.canPlantTree(treeDir)) {
+						rc.plantTree(treeDir);
+						treesBuilt++;
+						break;
+					}
+				}
+			}
+
+		} catch (GameActionException e) {
+			System.out.print("Exception in FarmerGardenerRobot.waterTrees: " + e);
+		}
 	}
 
 }

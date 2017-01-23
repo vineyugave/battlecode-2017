@@ -33,6 +33,9 @@ public class ArchonRobot extends SmartBaseRobot {
 
 		final float bulletCount = rc.getTeamBullets();
 
+		// If we have enough bullets to purchase enough victory points to win, do it.
+		buyPointsIfItWillMakeUsWin();
+
 		// try to build a farmer if necessary
 		if (shouldBuildFarmer(bulletCount)) {
 			for (int i = 0; i < 8; i++ ) {
