@@ -1,14 +1,9 @@
 package p_patrick.robots;
 
 import battlecode.common.*;
-import ddframework.robots.BaseRobot;
-import ddframework.util.CombatUtil;
-import ddframework.util.Navigation;
-import ddframework.util.RandomUtil;
+import ddframework.robots.SmartBaseRobot;
 
-import java.util.Random;
-
-public class SoldierRobot extends BaseRobot {
+public class SoldierRobot extends SmartBaseRobot {
     static private Direction exploreDirection;
 
     public SoldierRobot(RobotController controller) {
@@ -33,12 +28,17 @@ public class SoldierRobot extends BaseRobot {
 
     @Override
     protected void onGameRound(RobotController rc) throws Exception {
-        // If there are any nearby enemy robots
+	    super.onGameRound(rc);
+
+	    RobotInfo[] visibleHostiles = getCachedVisibleHostiles();
+	    RobotInfo[] visibleFriendlies = getCachedVisibleFriendlies();
+
+	    // If there are any nearby enemy robots
         if (visibleHostiles.length > 0) {
             // And we have enough bullets, and haven't attacked yet this turn...
             if (rc.canFireSingleShot()) {
                 // ...Then fire a bullet in the direction of the enemy.
-                RobotInfo target = Navigation.findClosestRobot(visibleHostiles,rc);
+                RobotInfo target = findClosestRobot(visibleHostiles);
                 rc.fireSingleShot(rc.getLocation().directionTo(target.location));
             }
         }
@@ -49,7 +49,7 @@ public class SoldierRobot extends BaseRobot {
             // search for all gardeners first
             for (RobotInfo robot : visibleFriendlies) {
                 if (robot.type == RobotType.GARDENER) {
-                    Navigation.patrol(robot, rc);
+                    patrol(robot);
                     foundHighPriorityTarget = true;
                 }
             }
@@ -57,7 +57,7 @@ public class SoldierRobot extends BaseRobot {
                 // search for archons if we didn't find a gardener
                 for (RobotInfo robot : visibleFriendlies) {
                     if (robot.type == RobotType.ARCHON) {
-                        Navigation.patrol(robot, rc);
+                        patrol(robot);
                         foundHighPriorityTarget = true;
                     }
                 }
@@ -83,9 +83,9 @@ public class SoldierRobot extends BaseRobot {
         }
 
         System.out.println("Exploring in a random direction: " + exploreDirection);
-        if (!Navigation.tryMove(exploreDirection, rc)) {
+        if (!tryMove(exploreDirection)) {
             exploreDirection = exploreDirection.rotateLeftDegrees(90);
-            Navigation.tryMove(exploreDirection, rc);
+            tryMove(exploreDirection);
         }
 
     }

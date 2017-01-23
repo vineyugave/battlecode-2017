@@ -3,7 +3,6 @@ package p_experiment.robots;
 import battlecode.common.Direction;
 import battlecode.common.RobotController;
 import ddframework.robots.BaseRobot;
-import ddframework.util.Navigation;
 import ddframework.util.RandomUtil;
 import ddframework.broadcast.SharedBuffer;
 
@@ -70,7 +69,7 @@ public class ArchonRobot extends BaseRobot {
 			} else {
 				mDirection = mDirection.rotateLeftDegrees(OBJECT_AVOID_DEGREES);
 			}
-			Navigation.tryMove(mDirection, rc);
+			tryMove(mDirection);
 		}
 	}
 

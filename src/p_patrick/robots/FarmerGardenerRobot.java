@@ -1,14 +1,14 @@
 package p_patrick.robots;
 
 import battlecode.common.*;
-import ddframework.robots.BaseRobot;
+import ddframework.robots.SmartBaseRobot;
 import ddframework.util.RandomUtil;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-public class FarmerGardenerRobot extends BaseRobot {
+public class FarmerGardenerRobot extends SmartBaseRobot {
 
 	private static final int RAND_EXPLORES = 3;
 	private static final int REVERSES = 3;
@@ -70,12 +70,14 @@ public class FarmerGardenerRobot extends BaseRobot {
 
 	@Override
 	protected void onGameRound(RobotController rc) throws Exception {
+		super.onGameRound(rc);
+
 		int nextState;
 		final float bulletCount = rc.getTeamBullets();
 
 		// For each target unit production count we have, check to see if we should built it and if so, do it.
 		// TODO: this isn't great because it doesn't track deaths.  Need to keep producing.
-		for(Map.Entry<RobotType, Integer> entry : targetUnitProductionCounts.entrySet()) {
+		for (Map.Entry<RobotType, Integer> entry : targetUnitProductionCounts.entrySet()) {
 			RobotType type = entry.getKey();
 			if (shouldBuildRobot(type, bulletCount)) {
 				Direction randDir = RandomUtil.randomDirection();

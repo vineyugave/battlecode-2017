@@ -1,13 +1,11 @@
 package p_patrick.robots;
 
-import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
-import ddframework.robots.BaseRobot;
-import ddframework.util.Navigation;
+import ddframework.robots.SmartBaseRobot;
 import ddframework.util.RandomUtil;
 
-public class TankRobot extends BaseRobot {
+public class TankRobot extends SmartBaseRobot {
 
     public TankRobot(RobotController controller) {
         super(controller);
@@ -15,10 +13,10 @@ public class TankRobot extends BaseRobot {
 
     @Override
     protected void onGameRound(RobotController rc) throws Exception {
-        MapLocation myLocation = rc.getLocation();
+        super.onGameRound(rc);
 
         // See if there are any nearby enemy robots
-        RobotInfo[] robots = rc.senseNearbyRobots(-1, enemyTeam);
+        RobotInfo[] robots = rc.senseNearbyRobots(-1, getEnemyTeam());
 
         // If there are some...
         if (robots.length > 0) {
@@ -30,6 +28,6 @@ public class TankRobot extends BaseRobot {
         }
 
         // Move randomly
-        Navigation.tryMove(RandomUtil.randomDirection(), rc);
+        tryMove(RandomUtil.randomDirection());
     }
 }

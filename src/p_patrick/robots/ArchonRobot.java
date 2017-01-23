@@ -3,11 +3,10 @@ package p_patrick.robots;
 import battlecode.common.Direction;
 import battlecode.common.RobotController;
 import ddframework.broadcast.SharedBuffer;
-import ddframework.robots.BaseRobot;
-import ddframework.util.Navigation;
+import ddframework.robots.SmartBaseRobot;
 import ddframework.util.RandomUtil;
 
-public class ArchonRobot extends BaseRobot {
+public class ArchonRobot extends SmartBaseRobot {
 
 	private static final int FAST_PRODUCE_FARMER_LIMIT = 13;
 	private static final float BULLET_THRESHOLD_GARDENER_FAST_PRODUCE = 155f;
@@ -30,6 +29,8 @@ public class ArchonRobot extends BaseRobot {
 
 	@Override
 	protected void onGameRound(RobotController rc) throws Exception {
+		super.onGameRound(rc);
+
 		final float bulletCount = rc.getTeamBullets();
 
 		// try to build a farmer if necessary
@@ -70,7 +71,7 @@ public class ArchonRobot extends BaseRobot {
 			} else {
 				mDirection = mDirection.rotateLeftDegrees(OBJECT_AVOID_DEGREES);
 			}
-			Navigation.tryMove(mDirection, rc);
+			tryMove(mDirection);
 		}
 	}
 

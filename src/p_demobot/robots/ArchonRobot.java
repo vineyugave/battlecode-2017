@@ -4,7 +4,6 @@ import battlecode.common.Direction;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import ddframework.robots.BaseRobot;
-import ddframework.util.Navigation;
 import ddframework.util.RandomUtil;
 
 public class ArchonRobot extends BaseRobot {
@@ -24,7 +23,7 @@ public class ArchonRobot extends BaseRobot {
         }
 
         // Move randomly
-        Navigation.tryMove(RandomUtil.randomDirection(), rc);
+        tryMove(RandomUtil.randomDirection());
 
         // Broadcast archon's location for other robots on the team to know
         MapLocation myLocation = rc.getLocation();

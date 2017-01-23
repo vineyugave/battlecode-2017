@@ -5,7 +5,6 @@ import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 import battlecode.common.Team;
 import ddframework.robots.BaseRobot;
-import ddframework.util.Navigation;
 import ddframework.util.RandomUtil;
 
 public class SoldierRobot extends BaseRobot {
@@ -35,6 +34,6 @@ public class SoldierRobot extends BaseRobot {
         }
 
         // Move randomly
-        Navigation.tryMove(RandomUtil.randomDirection(), rc);
+        tryMove(RandomUtil.randomDirection());
     }
 }

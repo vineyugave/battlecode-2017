@@ -1,11 +1,9 @@
 package p_patrick.robots;
 
 import battlecode.common.*;
-import ddframework.robots.BaseRobot;
-import ddframework.util.CombatUtil;
-import ddframework.util.Navigation;
+import ddframework.robots.SmartBaseRobot;
 
-public class ScoutRobot extends BaseRobot {
+public class ScoutRobot extends SmartBaseRobot {
 
     static private Direction exploreDirection = new Direction((float)Math.random() * 2 * (float)Math.PI);
 
@@ -15,32 +13,34 @@ public class ScoutRobot extends BaseRobot {
 
     @Override
     protected void onGameRound(RobotController rc) throws Exception {
+        super.onGameRound(rc);
 
         treeShakeHop();
 
         boolean foundHighPriorityTarget = false;
 
-        if (visibleHostiles.length > 0) {
+        RobotInfo[] hostiles = getCachedVisibleHostiles();
+        if (hostiles.length > 0) {
             // search for all gardeners first
-            for (RobotInfo robot : visibleHostiles) {
+            for (RobotInfo robot : hostiles) {
                 if (robot.type == RobotType.GARDENER) {
-                    CombatUtil.attackAndFollow(robot, rc);
+                    attackAndFollow(robot);
                     foundHighPriorityTarget = true;
                     break;
                 }
             }
             if (!foundHighPriorityTarget){
                 // search for archons if we didn't find a gardener
-                for (RobotInfo robot : visibleHostiles) {
+                for (RobotInfo robot : hostiles) {
                     if (robot.type == RobotType.ARCHON) {
-                        CombatUtil.attackAndFollow(robot, rc);
+                        attackAndFollow(robot);
                         foundHighPriorityTarget = true;
                         break;
                     }
                 }
             }
             if (!foundHighPriorityTarget) {
-                CombatUtil.attackAndFollow(visibleHostiles[0], rc);
+                attackAndFollow(hostiles[0]);
             }
 
         } else {
@@ -57,7 +57,7 @@ public class ScoutRobot extends BaseRobot {
             return;
         }
 
-        for (TreeInfo tree : visibleTrees) {
+        for (TreeInfo tree : getCachedVisibleTrees()) {
             if (tree.containedBullets > 0) {
                 if (rc.canShake(tree.location) && tree.containedBullets > 0 && rc.canInteractWithTree(tree.getID())) {
                     System.out.print("SHAKIN' DAT TREE.  Pre-Shake Bullet Count: " + rc.getTeamBullets());
@@ -65,8 +65,8 @@ public class ScoutRobot extends BaseRobot {
                     System.out.print("SHOOK DAT TREE.  Post-Shake Bullet Count: " + rc.getTeamBullets());
                     rc.setIndicatorDot(tree.location,0,155,155);
                 } else {
-                    Direction dir = myLocation.directionTo(tree.location);
-                    Navigation.tryMove(dir, rc);
+                    Direction dir = getCachedLocation().directionTo(tree.location);
+                    tryMove(dir);
                 }
                 return;
             }
@@ -81,9 +81,9 @@ public class ScoutRobot extends BaseRobot {
         }
 
         System.out.println("Exploring in a random direction: " + exploreDirection);
-        if (!Navigation.tryMove(exploreDirection, rc)) {
+        if (!tryMove(exploreDirection)) {
             exploreDirection = exploreDirection.rotateLeftDegrees(90);
-            Navigation.tryMove(exploreDirection, rc);
+            tryMove(exploreDirection);
         }
 
     }

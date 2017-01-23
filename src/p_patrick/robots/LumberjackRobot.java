@@ -1,32 +1,32 @@
 package p_patrick.robots;
 
 import battlecode.common.*;
-import ddframework.robots.BaseRobot;
-import ddframework.util.Navigation;
+import ddframework.robots.SmartBaseRobot;
 import ddframework.util.RandomUtil;
 
 import java.util.Arrays;
 
-public class LumberjackRobot extends BaseRobot {
+public class LumberjackRobot extends SmartBaseRobot {
 
     static private Direction exploreDirection = new Direction((float)Math.random() * 2 * (float)Math.PI);
 
     public LumberjackRobot(RobotController controller) {
         super(controller);
-
     }
 
     @Override
     protected void onGameRound(RobotController rc) throws Exception {
+        super.onGameRound(rc);
+
         // See if there are any enemy robots within striking range (distance 1 from lumberjack's radius)
-        RobotInfo[] robots = rc.senseNearbyRobots(GameConstants.LUMBERJACK_STRIKE_RADIUS, enemyTeam);
+        RobotInfo[] robots = rc.senseNearbyRobots(GameConstants.LUMBERJACK_STRIKE_RADIUS, getEnemyTeam());
 
         if (robots.length > 0 && !rc.hasAttacked()) {
-            RobotInfo closestRobot = Navigation.findClosestRobot(robots, rc);
+            RobotInfo closestRobot = findClosestRobot(robots);
             attackAndStrike(closestRobot, rc);
         } else {
             // No close robots, so search for robots within sight radius
-            robots = visibleHostiles;
+            robots = getCachedVisibleHostiles();
 
             // If there is a robot, move towards it
             if (robots.length > 0) {
@@ -43,8 +43,9 @@ public class LumberjackRobot extends BaseRobot {
     }
 
     private void tryMoveChopDir(Direction dir, RobotController rc) throws GameActionException {
+	    final MapLocation myLocation = getCachedLocation();
 
-        // move toward and target trees.
+	    // move toward and target trees.
         TreeInfo[] trees = rc.senseNearbyTrees(rc.getType().sensorRadius);
         if (trees.length > 0) {
 
@@ -54,14 +55,14 @@ public class LumberjackRobot extends BaseRobot {
             TreeInfo[] damagedTrees = Arrays.stream(enemyNeutralTrees).filter(x -> x.getHealth() < x.maxHealth).toArray(TreeInfo[]::new);
 
             if (damagedTrees.length > 0) {
-                TreeInfo closestTree = Navigation.findClosestTree(damagedTrees, rc);
+                TreeInfo closestTree = findClosestTree(damagedTrees);
                 if (closestTree != null) {
                     System.out.print("Found a damaged enemy/neutral tree");
-                    dir = myLocation.directionTo(closestTree.location);
+	                dir = myLocation.directionTo(closestTree.location);
                     rc.setIndicatorLine(myLocation, closestTree.location, 255, 20, 0);
                 }
             } else if (enemyNeutralTrees.length > 0) {
-                TreeInfo closestTree = Navigation.findClosestTree(enemyNeutralTrees, rc);
+                TreeInfo closestTree = findClosestTree(enemyNeutralTrees);
                 if (closestTree != null) {
                     System.out.print("Found an enemy/neutral tree");
                     dir = myLocation.directionTo(closestTree.location);
@@ -81,7 +82,7 @@ public class LumberjackRobot extends BaseRobot {
             rc.move(dir);
         }
         // If moving isn't possible, check for tree.
-        else if (treeAhead != null && (treeAhead.team == Team.NEUTRAL || treeAhead.team == enemyTeam)) {
+        else if (treeAhead != null && (treeAhead.team == Team.NEUTRAL || treeAhead.team == getEnemyTeam())) {
             // If we can shake the tree and it has bullets, lets get those out!
             if (rc.canShake(dirLoc) && treeAhead.containedBullets > 0) {
                 System.out.print("SHAKIN' DAT TREE.  Previous Bullets: " + rc.getTeamBullets());
@@ -112,7 +113,7 @@ public class LumberjackRobot extends BaseRobot {
         if (rc.canStrike()) {
             rc.strike();
         }
-        Navigation.tryMove(toEnemy, rc);
+        tryMove(toEnemy);
     }
 
     private void explore() throws GameActionException {
@@ -123,9 +124,9 @@ public class LumberjackRobot extends BaseRobot {
         }
 
         System.out.println("Exploring in a random direction: " + exploreDirection);
-        if (!Navigation.tryMove(exploreDirection, rc)) {
+        if (!tryMove(exploreDirection)) {
             exploreDirection = exploreDirection.rotateLeftDegrees(90);
-            Navigation.tryMove(exploreDirection, rc);
+            tryMove(exploreDirection);
         }
 
     }
