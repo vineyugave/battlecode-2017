@@ -1,9 +1,6 @@
 package ddframework.robots;
 
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
-import battlecode.common.RobotInfo;
-import battlecode.common.TreeInfo;
+import battlecode.common.*;
 
 import java.util.ArrayList;
 import java.util.List;

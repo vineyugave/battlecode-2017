@@ -2,6 +2,7 @@ package ddframework.robots;
 
 import battlecode.common.*;
 import ddframework.broadcast.SharedBuffer;
+import ddframework.util.RandomUtil;
 
 public abstract strictfp class BaseRobot {
 
@@ -75,30 +76,33 @@ public abstract strictfp class BaseRobot {
 	}
 
 	protected void attackAndFollow(RobotInfo enemyRobot) throws GameActionException {
-		final RobotController rc = getRc();
-
+		RobotController rc = getRc();
 		MapLocation enemyLocation = enemyRobot.getLocation();
 		MapLocation myLocation = rc.getLocation();
 		Direction toEnemy = myLocation.directionTo(enemyLocation);
 		Direction fromEnemy = enemyLocation.directionTo(myLocation);
-		int keepDistance = 1;
+		Integer keepDistance = 1;
 
+		// We're scared of lumberjacks.  They're mean.
 		if (enemyRobot.type == RobotType.LUMBERJACK) {
 			keepDistance = 6;
 		}
-
-		if (!rc.hasMoved()){
-			if (!enemyLocation.isWithinDistance(myLocation, rc.getType().strideRadius * keepDistance)) {
-				tryMove(toEnemy);
-			} else {
-				tryMove(fromEnemy);
+		try {
+			if (!rc.hasMoved()){
+				if (!enemyLocation.isWithinDistance(myLocation, rc.getType().strideRadius * keepDistance)) {
+					tryMove(toEnemy);
+				} else {
+					tryMove(fromEnemy);
+				}
 			}
-		}
 
-		if (!rc.hasAttacked()) {
-			if (rc.canFireSingleShot()) {
-				rc.fireSingleShot(toEnemy);
+			if (!rc.hasAttacked()) {
+				if (rc.canFireSingleShot() && safeToFire(toEnemy)) {
+					rc.fireSingleShot(toEnemy);
+				}
 			}
+		} catch (GameActionException e) {
+			System.out.println("Exception in CombatUtil.attackAndFollow: " + e);
 		}
 	}
 
@@ -128,28 +132,32 @@ public abstract strictfp class BaseRobot {
 		if (rc.hasMoved()) {
 			return false;
 		}
-		// First, try intended direction
-		if (rc.canMove(dir)) {
-			rc.move(dir);
-			return true;
-		}
-
-		// Now try a bunch of similar angles
-		int currentCheck = 1;
-
-		while (currentCheck <= checksPerSide) {
-			// Try the offset of the left side
-			if (rc.canMove(dir.rotateLeftDegrees(degreeOffset * currentCheck))) {
-				rc.move(dir.rotateLeftDegrees(degreeOffset * currentCheck));
+		try {
+			// First, try intended direction
+			if (rc.canMove(dir)) {
+				rc.move(dir);
 				return true;
 			}
-			// Try the offset on the right side
-			if (rc.canMove(dir.rotateRightDegrees(degreeOffset * currentCheck))) {
-				rc.move(dir.rotateRightDegrees(degreeOffset * currentCheck));
-				return true;
+
+			// Now try a bunch of similar angles
+			int currentCheck = 1;
+
+			while (currentCheck <= checksPerSide) {
+				// Try the offset of the left side
+				if (rc.canMove(dir.rotateLeftDegrees(degreeOffset * currentCheck))) {
+					rc.move(dir.rotateLeftDegrees(degreeOffset * currentCheck));
+					return true;
+				}
+				// Try the offset on the right side
+				if (rc.canMove(dir.rotateRightDegrees(degreeOffset * currentCheck))) {
+					rc.move(dir.rotateRightDegrees(degreeOffset * currentCheck));
+					return true;
+				}
+				// No move performed, try slightly further
+				currentCheck++;
 			}
-			// No move performed, try slightly further
-			currentCheck++;
+		} catch (GameActionException e) {
+			System.out.println("Exception in Navigation.tryMove: "+e);
 		}
 
 		// A move never happened, so return false.
@@ -186,35 +194,61 @@ public abstract strictfp class BaseRobot {
 		return closestTree;
 	}
 
-	protected void follow(RobotInfo robot) throws GameActionException {
+	protected boolean follow(RobotInfo robot) {
 		final RobotController rc = getRc();
-
-		MapLocation robotLocation = robot.getLocation();
-		MapLocation myLocation = rc.getLocation();
-		Direction toEnemy = myLocation.directionTo(robotLocation);
-
-		// Move toward robot if I can move and the target is not within stride distance
-		if (!rc.hasMoved() && robotLocation.isWithinDistance(myLocation,rc.getType().strideRadius)) {
-			tryMove(toEnemy);
+		if (rc.hasMoved()) {
+			return false;
 		}
+		try {
+			MapLocation robotLocation = robot.getLocation();
+			MapLocation myLocation = rc.getLocation();
+			Direction toEnemy = myLocation.directionTo(robotLocation);
+
+			// Move toward robot if I can move and the target is not within stride distance
+			if (!rc.hasMoved() && robotLocation.isWithinDistance(myLocation,rc.getType().strideRadius)) {
+				return tryMove(toEnemy);
+			}
+		} catch (GameActionException e) {
+			System.out.println("Exception in follow: "+e);
+			return false;
+		}
+		return false;
 	}
 
-	protected void patrol(RobotInfo robot) throws GameActionException {
+	protected boolean patrol(RobotInfo robot) {
 		final RobotController rc = getRc();
-
-		MapLocation robotLocation = robot.getLocation();
-		MapLocation myLocation = rc.getLocation();
-		Direction toRobot = myLocation.directionTo(robotLocation);
-		Direction awayFromRobot = robotLocation.directionTo(myLocation);
-		// Move away from robot if it is within my stride radius
-		if (!rc.hasMoved() && robotLocation.isWithinDistance(myLocation,rc.getType().strideRadius)) {
-			tryMove(awayFromRobot);
-			rc.setIndicatorLine(myLocation, robotLocation.add(awayFromRobot), 20, 20, 255);
+		if (rc.hasMoved()) {
+			return false;
 		}
-		// Move toward robot if the robot is not within sensor distance minus stride radius
-		if (!rc.hasMoved() && !robotLocation.isWithinDistance(myLocation,rc.getType().sensorRadius - rc.getType().strideRadius)) {
-			tryMove(toRobot);
-			rc.setIndicatorLine(myLocation, robotLocation.add(toRobot), 255, 20, 20);
+		try {
+			MapLocation robotLocation = robot.getLocation();
+			MapLocation myLocation = rc.getLocation();
+			Direction toRobot = myLocation.directionTo(robotLocation);
+			Direction awayFromRobot = robotLocation.directionTo(myLocation);
+
+			float minDistance = rc.getType().strideRadius;
+			float maxDistance = rc.getType().sensorRadius - rc.getType().strideRadius;
+			float currentDistance = myLocation.distanceTo(robotLocation);
+
+			System.out.print("PATROL distances: min:" + minDistance + " max:" + maxDistance + " cur:" + currentDistance);
+
+			if (currentDistance > maxDistance)
+			{
+				rc.setIndicatorLine(myLocation, robotLocation.add(toRobot), 20, 20, 255);
+				return tryMove(toRobot);
+			}
+
+			if (currentDistance < minDistance)
+			{
+				rc.setIndicatorLine(myLocation, robotLocation.add(awayFromRobot), 20, 20, 255);
+				return tryMove(awayFromRobot);
+			}
+
+			return tryMove(RandomUtil.randomDirection());
+
+		} catch (GameActionException e) {
+			System.out.println("Exception in Navigation.patrol: "+e);
+			return false;
 		}
 	}
 
@@ -288,9 +322,62 @@ public abstract strictfp class BaseRobot {
 				tryMove(moveDir);
 			}
 		} catch (GameActionException e) {
-			System.out.println("Sidestep Attempt Failed!");
-			e.printStackTrace();
+			System.out.println("Exception in trySidestep: " + e);
 		}
+	}
+
+	protected boolean safeToFireAtTarget(RobotInfo target)
+	{
+		final RobotController rc = getRc();
+
+		return safeToFire(rc.getLocation().directionTo(target.getLocation()));
+	}
+
+	protected boolean safeToFire(Direction dir)
+	{
+		final RobotController rc = getRc();
+
+		float DISTANCE_INCREMENT = 0.3f; // Magic numbers!
+		float maxTestDistance = rc.getType().sensorRadius;
+		float testDistance = rc.getType().bodyRadius + 0.1f;
+
+		MapLocation testLocation;
+		MapLocation myLocation = rc.getLocation();
+
+		// increment the test distance while it is less than the max.  testing for friendly robots all along the way.
+		while ( testDistance < maxTestDistance)
+		{
+			testLocation = myLocation.add(dir, testDistance);
+			try {
+				if (rc.isLocationOccupiedByRobot(testLocation)) {
+					RobotInfo bot = rc.senseRobotAtLocation(testLocation);
+					return bot.team != rc.getTeam();
+				}
+			} catch (GameActionException e) {
+				System.out.println("Exception in CombatUtil.safeToFire: "+e);
+			}
+			testDistance += DISTANCE_INCREMENT;
+		}
+		return true;
+	}
+
+	protected void buyPointsIfItWillMakeUsWin() {
+		RobotController rc = getRc();
+		try {
+			if (rc.getTeamBullets() > (1000 - rc.getTeamVictoryPoints())* getPointCostThisRound() || rc.getRoundLimit() -rc.getRoundNum() < 5)
+			{
+				rc.donate(rc.getTeamBullets());
+			}
+			if (rc.getTeamBullets() > 1200)
+				rc.donate(rc.getTeamBullets() -1000);
+		} catch (GameActionException e) {
+			System.out.println("Exception in buyPointsIfItWillMakeUsWin: "+e);
+		}
+	}
+
+	protected float getPointCostThisRound() {
+		RobotController rc = getRc();
+		return (float) (7.5 + (rc.getRoundNum()*12.5 / rc.getRoundLimit()));
 	}
 
 }
