@@ -4,21 +4,21 @@ DD Battlecode Project
 This is the DD Battlecode repo!
 
 ## DD Framework Overview
-- `src/player`
-    Each package in this directory is for one whole player. Each player must be represented by exactly **one** class
-    named `RobotPlayer`.
 - `src/ddframework`
     This is our root package for code that is shared between players
-- `src/player/demobot`
-    This is the example that shipped with the Battlecode scaffold. It has been refactored to use our framework, but
-     otherwise, every Battlecode contestant has this logic as a starting point.
-- `src/player/control` and `src/player/experiment`
-    If you want to have "control" and "experiment" copies of similar logic, so that you can play them against each other
-    in order to tune your strategy, these are examples.
-- `src/player/{playername}/robots`
+- `src/p_{playername}`
+    This is a package that contains one entire game strategy. It contains a single `RobotPlayer` class that controls
+    which robot class gets assigned to which `RobotController` in the game.
+- `src/p_{playername}/robots`
     These are the classes that describe different robot behaviors. The `RobotPlayer` class chooses the appropriate one
     to create depending on which type of robot it is. If you want to get fancy and have multiple possible classes for
     each type of robot, you could put that logic in `RobotPlayer`.
+- `src/player/p_demobot`
+    This is the example that shipped with the Battlecode scaffold. It has been refactored to use our framework, but
+     otherwise, every Battlecode contestant has this logic as a starting point.
+- `src/p_control` and `src/p_experiment`
+    If you want to have "control" and "experiment" copies of similar logic, so that you can play them against each other
+    in order to tune your strategy, these are examples.
 - `src/ddframework/broadcast/SharedBuffer.java`
     This is one possible means of coordinating the shared buffer that robots use to broadcast messages to each other. It
     currently supports two approaches:
