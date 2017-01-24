@@ -4,7 +4,7 @@ import battlecode.common.Direction;
 import battlecode.common.RobotController;
 import ddframework.robots.BaseRobot;
 import ddframework.util.RandomUtil;
-import ddframework.broadcast.SharedBuffer;
+import ddframework.managers.CommunicationManager;
 
 public class ArchonRobot extends BaseRobot {
 
@@ -85,10 +85,10 @@ public class ArchonRobot extends BaseRobot {
 
 	private void incrementFarmerCount() throws Exception {
 		final int currentCount = getFarmerCount();
-		getSharedBuffer().write(SharedBuffer.KnownIndexes.FARMER_COUNT, currentCount + 1);
+		getSharedBuffer().write(CommunicationManager.KnownIndexes.FARMER_COUNT, currentCount + 1);
 	}
 
 	private int getFarmerCount() throws Exception {
-		return getSharedBuffer().read(SharedBuffer.KnownIndexes.FARMER_COUNT);
+		return getSharedBuffer().read(CommunicationManager.KnownIndexes.FARMER_COUNT);
 	}
 }

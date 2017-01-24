@@ -1,9 +1,9 @@
-package ddframework.broadcast;
+package ddframework.managers;
 
 import battlecode.common.GameConstants;
 import battlecode.common.RobotController;
 
-public class SharedBuffer {
+public class CommunicationManager {
 
 	private static final int UNKNOWN = Integer.MIN_VALUE;
 	private static final int IDX_STACK_END = GameConstants.BROADCAST_MAX_CHANNELS;
@@ -22,7 +22,7 @@ public class SharedBuffer {
 	private int mCachedNextWritePointer;
 	private boolean mDirty;
 
-	public SharedBuffer(RobotController rc) throws Exception {
+	public CommunicationManager(RobotController rc) throws Exception {
 		mRc = rc;
 		mInitialized = false;
 		mDirty = false;

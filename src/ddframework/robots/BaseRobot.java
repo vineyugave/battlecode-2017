@@ -1,7 +1,7 @@
 package ddframework.robots;
 
 import battlecode.common.*;
-import ddframework.broadcast.SharedBuffer;
+import ddframework.managers.CommunicationManager;
 import ddframework.util.RandomUtil;
 
 public abstract strictfp class BaseRobot {
@@ -12,7 +12,7 @@ public abstract strictfp class BaseRobot {
 	private final Team mTeam;
 	private final Team mEnemyTeam;
 
-	private SharedBuffer mSharedBuffer;
+	private CommunicationManager mCommunicationManager;
 
 	public BaseRobot(RobotController rc) {
 		mRobotController = rc;
@@ -35,8 +35,8 @@ public abstract strictfp class BaseRobot {
 
 			try {
 				// flush the buffer
-				if (mSharedBuffer != null) {
-					mSharedBuffer.flush();
+				if (mCommunicationManager != null) {
+					mCommunicationManager.flush();
 				}
 			} catch (Throwable t) {
 				System.err.println("Error cleaning up " + mRobotController.getType());
@@ -68,11 +68,11 @@ public abstract strictfp class BaseRobot {
 		return mRobotController;
 	}
 
-	protected SharedBuffer getSharedBuffer() throws Exception {
-		if (mSharedBuffer == null) {
-			mSharedBuffer = new SharedBuffer(mRobotController);
+	protected CommunicationManager getSharedBuffer() throws Exception {
+		if (mCommunicationManager == null) {
+			mCommunicationManager = new CommunicationManager(mRobotController);
 		}
-		return mSharedBuffer;
+		return mCommunicationManager;
 	}
 
 	protected void attackAndFollow(RobotInfo enemyRobot) throws GameActionException {

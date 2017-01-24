@@ -2,7 +2,7 @@ package p_patrick.robots;
 
 import battlecode.common.Direction;
 import battlecode.common.RobotController;
-import ddframework.broadcast.SharedBuffer;
+import ddframework.managers.CommunicationManager;
 import ddframework.robots.SmartBaseRobot;
 import ddframework.util.RandomUtil;
 
@@ -90,10 +90,10 @@ public class ArchonRobot extends SmartBaseRobot {
 
 	private void incrementFarmerCount() throws Exception {
 		final int currentCount = getFarmerCount();
-		getSharedBuffer().write(SharedBuffer.KnownIndexes.FARMER_COUNT, currentCount + 1);
+		getSharedBuffer().write(CommunicationManager.KnownIndexes.FARMER_COUNT, currentCount + 1);
 	}
 
 	private int getFarmerCount() throws Exception {
-		return getSharedBuffer().read(SharedBuffer.KnownIndexes.FARMER_COUNT);
+		return getSharedBuffer().read(CommunicationManager.KnownIndexes.FARMER_COUNT);
 	}
 }
